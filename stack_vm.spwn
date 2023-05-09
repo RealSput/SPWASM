@@ -1,0 +1,97 @@
+// let parser = require("@webassemblyjs/wast-parser");
+let this = {};
+
+let Array = (l) {
+	return [null] * l;
+}
+
+type @StackVM;
+impl @StackVM {
+    create: () {
+        let this.stack = [];
+        let this.pc = 0;
+        return @StackVM
+    },
+	setMemory: (pages) {
+		this.memory = Array(pages * 1024);
+	},
+    execute: (instruction) {
+        match(instruction.opcode) {
+            =="i32.const": () {
+                this.stack.push(instruction.args[0]);
+                }(),
+            =="i32.add": () {
+                let b = this.stack.pop();
+                let a = this.stack.pop();
+                this.stack.push(a + b);
+                }(),
+            =="i32.sub": () {
+                let d = this.stack.pop();
+                let c = this.stack.pop();
+                this.stack.push(c - d);
+                }(),
+            =="table": () {
+                this.table = Array(instruction.args[0])
+                }(),
+            =="elem": () {
+                let offset = this.stack.pop();
+                for i in instruction.args {
+                    let funcName = instruction.args[i + 1];
+                    let func = this.functions[funcName];
+                    this.table[offset + i] = func;
+                }
+                }(),
+            =="call_indirect": () {
+                if (this.stack.length < 1) {
+                    throw "Stack underflow";
+                }
+                let funcIndex = this.stack.pop();
+                if (funcIndex.type != @number) {
+                    throw "Invalid function index";
+                }
+                let func = this.functions[funcIndex];
+                if (func) {
+                    func();
+                } else {
+                    throw "Function at index {} not found".fmt(funcIndex);
+                }
+                }(),
+            =="i32.store": () {
+                let value_i32s = instruction.args[0];
+                let offset_i32s = instruction.args[1];
+                this.memory[offset_i32s] = value_i32s;
+                }(),
+            =="i32.load": () {
+                let offset_i32l = instruction.args[0];
+                this.stack.push(this.memory[offset_i32l]);
+                }(),
+            =="local.get": () {
+                let res = this.params[0];
+                this.stack.push(res);
+                }(),
+            else: () {
+                throw "Unknown opcode: {}".fmt(instruction.opcode);
+}()
+        }
+        this.pc++;
+    },
+
+    run: (code, let args = []) {
+    	let this.params = [];
+        while (this.pc < code.length) {
+            let instruction = code[this.pc];
+            this.params = args
+            @StackVM::execute(instruction);
+        }
+        return this.stack;
+    }
+}
+
+let vm = @StackVM::create()
+vm::setMemory(1);
+let d = vm::run([
+  { opcode: 'local.get', args: [ 'x' ] },
+  { opcode: 'local.get', args: [ 'y' ] },
+  { opcode: 'i32.add', args: [] }
+], [9, 10]);
+$.print(d);
