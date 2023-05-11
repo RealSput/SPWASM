@@ -102,12 +102,10 @@ impl @stack_vm {
 };
 
 /* USAGE:
-let instructions = [
+let vm = @stack_vm::create([
     { opcode: "i32.const", args: [2] },
     { opcode: "i32.const", args: [3] },
     { opcode: "i32.add" }
-];
-
-let vm = @stack_vm::create();
+]); // params will be implemented soon
 vm.run(instructions);
 */
