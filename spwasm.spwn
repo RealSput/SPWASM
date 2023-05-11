@@ -98,12 +98,3 @@ impl @stack_vm {
         return self.stack;
     }
 }
-
-let vm = @stack_vm::create()
-vm.set_memory(1);
-let d = vm.run([
-  { opcode: 'local.get', args: [ 'x' ] },
-  { opcode: 'local.get', args: [ 'y' ] },
-  { opcode: 'i32.add', args: [] }
-], {x: 9, y: 10});
-$.print(d);
