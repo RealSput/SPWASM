@@ -1,0 +1,113 @@
+let pos = [15, 15];
+let stack = (' ' * 10).split(' ').map((_) => counter(-1));
+let lPos = counter(1);
+for i in stack {
+    i.display(pos[0], pos[1]);
+    pos[0] += 15 * 3
+}
+let check = (counter, callback) {
+    match(counter) {
+        ==
+        0: () {
+                callback(0);
+            }(), ==
+            1: () {
+                callback(1);
+            }(), ==
+            2: () {
+                callback(2);
+            }(), ==
+            3: () {
+                callback(3);
+            }(), ==
+            4: () {
+                callback(4);
+            }(), ==
+            5: () {
+                callback(5);
+            }(), ==
+            6: () {
+                callback(6);
+            }(), ==
+            7: () {
+                callback(7);
+            }(), ==
+            8: () {
+                callback(8);
+            }(), ==
+            9: () {
+                callback(9);
+            }(), ==
+            10: () {
+                callback(10);
+            }(),
+    }
+};
+let pop = (cb = -1) {
+    lPos--;
+    check(lPos, (p) {
+        if (cb != -1) {
+            cb(stack[p - 1]);
+        }
+        stack[p - 1] = -1;
+    })
+}
+let push = (x) {
+    check(lPos, (p) {
+        stack[p - 1] = x + 1; // +1 because for some reason, x is 1 less
+    })
+    lPos++;
+}
+
+let speed = 0.3;
+let result = counter(0);
+result.display(80 * 3, 30 * 3);
+$.add("Stack".to_obj().with(obj_props.X, 80 * 3).with(obj_props.Y, 20 * 3))
+$.add("Result".to_obj().with(obj_props.X, 80 * 3).with(obj_props.Y, 40 * 3))
+
+let add = () {
+    pop((x) {
+        result += x;
+    })
+    wait(speed);
+    pop((x) {
+        result += x;
+    })
+}
+
+let run = (instructions) {
+    for i in instructions {
+        match(i.opcode) {
+            =="i32.const": () {
+                wait(speed);
+                push(i.args[0]);
+            }(),
+            =="i32.add": () {
+                wait(speed);
+                add();
+            }()
+        }
+    };
+}
+
+// this is not really needed, but implemented just for compatibility
+type @stack_vm;
+impl @stack_vm {
+  create() {
+    return {
+      run,
+      setMemory: () {} // mock function
+    };
+  }
+};
+
+/* USAGE:
+let instructions = [
+    { opcode: "i32.const", args: [2] },
+    { opcode: "i32.const", args: [3] },
+    { opcode: "i32.add" }
+];
+
+let vm = @stack_vm::create();
+vm.run(instructions);
+*/
