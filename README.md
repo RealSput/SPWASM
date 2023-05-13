@@ -48,4 +48,3 @@ let instructions = [
 
 run(newinstr);
 ```
-```
