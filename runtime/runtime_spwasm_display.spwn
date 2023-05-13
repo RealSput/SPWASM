@@ -1,5 +1,3 @@
-/*
-*/
 extract obj_props
 
 objects_group = ?g;
@@ -249,31 +247,56 @@ let colors = {
 }
 
 let run = (instructions) {
+    let newinstr = [];
+
+    let cy = 43 * 3;
+    factor = 4;
+
     for i in instructions {
+        let hasArgs = true;
+        if !("args" in i) {
+            hasArgs = false;
+        }
+        let txt = (i.opcode + (" " + i.args.join(' ') if hasArgs else ""));
+        $.add(txt.to_obj().with(X, 130 * 3).with(Y, cy).with(GROUPS, objects_group).with(SCALING, 1 / factor));
+        let g = ?c;
+        $.add(obj {
+            OBJ_ID: 211,
+            X: (130 * 3 + (txt.length * 3.5 / factor * 3)),
+            Y: cy,
+            COLOR: g,
+            GROUPS: objects_group,
+            SCALING: 1 / factor
+        });
+        i.marker = g;
+        newinstr.push(i);
+        cy -= (10 / factor) * 3;
+    }
+    for i in newinstr {
         wait(speed);
         i.marker.set(rgb8(0, 255, 0))
         match(i.opcode) {
             =="i32.const": () {
                 push(i.args[0]);
-            }(),
+            }(), 
             =="i32.add": () {
                 add();
-            }(),
+            }(), 
             =="i32.mul": () {
                 mul();
-            }(),
+            }(), 
             =="i32.store": () {
                 store(i.args[0], i.args[1]);
-            }(),
+            }(), 
             =="i32.load": () {
                 push(memory[i.args[0]])
-            }(),
-            =="drawpix": () {
+            }(), 
+            == "drawpix": () {
                 drawPix(i.args[0], i.args[1])
-            }(),
+            }(), 
             =="clear": () {
                 clear();
-            }(),
+            }(), 
             =="clearmem": () {
                 clearmem();
             }()
@@ -281,48 +304,4 @@ let run = (instructions) {
     };
 }
 
-
-/* ---------------------------------- MAIN CODE ENDS HERE------------------------------------*/
-
-let instructions = [
-    { opcode: "drawpix", args: [[255, 255, 255], [3, 4]]},
-    { opcode: "drawpix", args: [[255, 255, 255], [3, 5]]},
-    { opcode: "drawpix", args: [[255, 255, 255], [3, 6]]},
-    { opcode: "drawpix", args: [[255, 255, 255], [4, 5]]},
-    { opcode: "drawpix", args: [[255, 255, 255], [5, 4]]},
-    { opcode: "drawpix", args: [[255, 255, 255], [5, 5]]},
-    { opcode: "drawpix", args: [[255, 255, 255], [5, 6]]},
-    { opcode: "drawpix", args: [[255, 255, 255], [7, 4]]},
-    { opcode: "drawpix", args: [[255, 255, 255], [7, 5]]},
-    { opcode: "drawpix", args: [[255, 255, 255], [7, 6]]},
-    { opcode: "i32.const", args: [5]},
-    { opcode: "i32.const", args: [3]},
-    { opcode: "i32.add" },
-];
-
-let cy = 43 * 3;
-factor = 4;
-
-let newinstr = []; 
-for i in instructions {
-    let hasArgs = true;
-    if !("args" in i) {
-        hasArgs = false;
-    }
-    let txt = (i.opcode + (" " + i.args.join(' ') if hasArgs else ""));
-    $.add(txt.to_obj().with(X, 130 * 3).with(Y, cy).with(GROUPS, objects_group).with(SCALING, 1 / factor));
-    let g = ?c;
-    $.add(obj {
-        OBJ_ID: 211,
-        X: (130 * 3 + (txt.length * 3.5 / factor * 3)),
-        Y: cy,
-        COLOR: g,
-        GROUPS: objects_group,
-        SCALING: 1 / factor
-    });
-    i.marker = g;
-    newinstr.push(i);
-    cy -= (10 / factor) * 3;
-}
-
-run(newinstr);
+return run;
