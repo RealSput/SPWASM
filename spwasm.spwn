@@ -95,6 +95,6 @@ impl @stack_vm {
             self.params = args
             self.execute(instruction);
         }
-        return self.stack;
+        return self.stack.pop();
     }
 }
