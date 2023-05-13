@@ -1,0 +1,328 @@
+/*
+*/
+extract obj_props
+
+objects_group = ?g;
+$.add( lock_to_player_trigger(objects_group,lock_x = true,lock_y = false) .with(X, 75 * 3)) // Creates a move trigger at X 600 that locks group 1 to the player's X
+
+DEFAULT_COLOR = rgb(0, 0, 0)
+
+display = (c, x, y) {
+    $.add(c.to_obj().with(X, x).with(Y, y).with(GROUPS, objects_group))
+}
+
+type @canvas
+impl @canvas {
+    new: (
+        x:@number = 0,
+        y:@number = 0,
+        width:@number = 10,
+        height:@number = 10,
+        scaling:@number = 1,
+        groups:@group|[@group] = [],
+        use_groups:@bool = false,
+    ){
+        let colors = []
+        for w in 0..width {
+            colors.push([])
+            for h in 0..height {
+                colors[w].push(?g if use_groups else ?c)
+                let pixel = obj {
+                    OBJ_ID: 211,
+                    X: x + 30 * scaling * (w+1/2),
+                    Y: y + 30 * scaling * (h+1/2),
+                    SCALING: scaling,
+                    GROUPS: groups,
+                }
+                match colors[w][h] {
+                    @color: (){
+                        pixel.set(COLOR, colors[w][h])
+                    }(),
+                    @group: (){
+                        pixel.add_groups(colors[w][h])
+                    }()
+                }
+                $.add(pixel)
+            }
+        }
+        return @canvas::{
+            x, y,
+            width, height,
+            scaling,
+            colors,
+            color: DEFAULT_COLOR,
+        }
+    },
+    setColor: (self, color:@chroma = DEFAULT_COLOR){
+        let self.color = color
+    },
+    drawPixel: (self, x:@number, y:@number){
+        -> match self.colors[x][y] {
+            @color: self.colors[x][y].set(self.color),
+            @group: self.colors[x][y].pulse(self.color, hold = 9999),
+        }
+    },
+    drawRect: (self, x:@number, y:@number, w:@number, h:@number){
+        for _x in x..x+w {
+            for _y in y..y+h {
+                self.drawPixel(_x,_y)
+            }
+        }
+    },
+    drawFill: (self){
+        self.setColor(rgb8(0, 0, 0))
+        self.drawRect(0,0,self.width,self.height)
+    },
+    drawEllipse: (self, x:@number, y:@number, width:@number, height:@number){
+        cwidth = width + 1
+        cheight = height + 1
+        let tracker = []
+        for i in 0..360 {
+            let angle = i/180 * PI
+            let x1 = x + $.floor(cwidth/2 + cwidth/3 * $.cos(angle) - cheight/3 * $.sin(angle) - 1.5)
+            let y1 = y + $.floor(cheight/2 + cheight/3 * $.cos(angle) + cwidth/3 * $.sin(angle) - 1.5)
+            let key = y1 * height + x1
+            if !tracker.contains(key) {
+                self.drawPixel(x1,y1)
+                tracker.push(key)
+            }
+        }
+    },
+    drawCircle: (self, x:@number, y:@number, radius:@number){
+        self.drawEllipse(x,y,radius,radius)
+    },
+}
+
+canvas = @canvas::new(
+    25 * 3, 12 * 3,            // position
+    11,11,   // width and height in pixels
+    0.3,         // the pixel-scaling of the canvas
+    objects_group
+)
+
+canvas.drawFill();
+
+let drawPix = (color, pos) {
+    canvas.setColor(rgb8(color[0], color[1], color[2]))
+    canvas.drawPixel(pos[0], pos[1]);
+}
+
+/* DRAWING CODE ENDS HERE */
+
+
+
+
+let pos = [15, 15];
+let stack = (' ' * 10).split(' ').map((_) => counter(-1));
+let lPos = counter(1);
+for i in stack {
+    display(i, pos[0], pos[1]);
+    pos[0] += 15 * 3
+}
+
+pos = [15, 50 * 3];
+
+let memory = (' ' * 10).split(' ').map((_) => counter(-1));
+for i in memory {
+    display(i, pos[0], pos[1]);
+    pos[0] += 15 * 3
+};
+
+let check = (counter, callback) {
+    match(counter) {
+        ==
+        0: () {
+                return callback(0);
+            }(), ==
+            1: () {
+                return callback(1);
+            }(), ==
+            2: () {
+                return callback(2);
+            }(), ==
+            3: () {
+                return callback(3);
+            }(), ==
+            4: () {
+                return callback(4);
+            }(), ==
+            5: () {
+                return callback(5);
+            }(), ==
+            6: () {
+                return callback(6);
+            }(), ==
+            7: () {
+                return callback(7);
+            }(), ==
+            8: () {
+                return callback(8);
+            }(), ==
+            9: () {
+                return callback(9);
+            }(), ==
+            10: () {
+                return callback(10);
+            }(),
+    }
+};
+let pop = (cb = -1) {
+    lPos--;
+    check(lPos, (p) {
+        if (cb != -1) {
+            cb(stack[p - 1]);
+        }
+        stack[p - 1] = 0;
+        stack[p - 1]--;
+    })
+}
+let push = (x) {
+    check(lPos, (p) {
+        stack[p - 1] = x + 1; // +1 because for some reason, x is 1 less
+    })
+    lPos++;
+}
+
+let store = (a, b) {
+    memory[b] = a + 1;
+}
+
+let clear = () {
+  for i in stack {
+      i = 0;
+      i--;
+      lPos = 1;
+  }  
+};
+
+let clearmem = () {
+  for i in memory {
+      i = 0;
+      if (i != -1) {
+        i--;
+      }
+  }  
+};
+
+let speed = 0.4;
+let result = counter(0);
+display(result, 80 * 3, 30 * 3);
+$.add("Stack".to_obj().with(obj_props.X, 80 * 3).with(obj_props.Y, 20 * 3).with(GROUPS, objects_group))
+$.add("Result".to_obj().with(obj_props.X, 80 * 3).with(obj_props.Y, 40 * 3).with(GROUPS, objects_group))
+$.add("Memory".to_obj().with(obj_props.X, 80 * 3).with(obj_props.Y, 60 * 3).with(GROUPS, objects_group))
+
+let add = () {
+    pop((x) {
+        result += x;
+    })
+    wait(speed);
+    pop((x) {
+        result += x;
+    })
+}
+
+let sub = () {
+    pop((x) {
+        wait(speed);
+        pop((y) {
+            result += y - x;
+        })
+    })
+}
+
+let mul = () {
+    pop((x) {
+        result = x;
+    })
+    wait(speed);
+    let b = pop((x) {
+        result *= x;
+    })
+}
+
+let colors = {
+    "1": [255, 255, 255], // red
+    "2": [0, 255, 0], // green
+    "3": [0, 0, 255], // blue
+    "4": [255, 0, 255], // purple
+    "5": [255, 255, 255] // white
+}
+
+let run = (instructions) {
+    for i in instructions {
+        wait(speed);
+        i.marker.set(rgb8(0, 255, 0))
+        match(i.opcode) {
+            =="i32.const": () {
+                push(i.args[0]);
+            }(),
+            =="i32.add": () {
+                add();
+            }(),
+            =="i32.mul": () {
+                mul();
+            }(),
+            =="i32.store": () {
+                store(i.args[0], i.args[1]);
+            }(),
+            =="i32.load": () {
+                push(memory[i.args[0]])
+            }(),
+            =="drawpix": () {
+                drawPix(i.args[0], i.args[1])
+            }(),
+            =="clear": () {
+                clear();
+            }(),
+            =="clearmem": () {
+                clearmem();
+            }()
+        }
+    };
+}
+
+
+/* ---------------------------------- MAIN CODE ENDS HERE------------------------------------*/
+
+let instructions = [
+    { opcode: "drawpix", args: [[255, 255, 255], [3, 4]]},
+    { opcode: "drawpix", args: [[255, 255, 255], [3, 5]]},
+    { opcode: "drawpix", args: [[255, 255, 255], [3, 6]]},
+    { opcode: "drawpix", args: [[255, 255, 255], [4, 5]]},
+    { opcode: "drawpix", args: [[255, 255, 255], [5, 4]]},
+    { opcode: "drawpix", args: [[255, 255, 255], [5, 5]]},
+    { opcode: "drawpix", args: [[255, 255, 255], [5, 6]]},
+    { opcode: "drawpix", args: [[255, 255, 255], [7, 4]]},
+    { opcode: "drawpix", args: [[255, 255, 255], [7, 5]]},
+    { opcode: "drawpix", args: [[255, 255, 255], [7, 6]]},
+    { opcode: "i32.const", args: [5]},
+    { opcode: "i32.const", args: [3]},
+    { opcode: "i32.add" },
+];
+
+let cy = 43 * 3;
+factor = 4;
+
+let newinstr = []; 
+for i in instructions {
+    let hasArgs = true;
+    if !("args" in i) {
+        hasArgs = false;
+    }
+    let txt = (i.opcode + (" " + i.args.join(' ') if hasArgs else ""));
+    $.add(txt.to_obj().with(X, 130 * 3).with(Y, cy).with(GROUPS, objects_group).with(SCALING, 1 / factor));
+    let g = ?c;
+    $.add(obj {
+        OBJ_ID: 211,
+        X: (130 * 3 + (txt.length * 3.5 / factor * 3)),
+        Y: cy,
+        COLOR: g,
+        GROUPS: objects_group,
+        SCALING: 1 / factor
+    });
+    i.marker = g;
+    newinstr.push(i);
+    cy -= (10 / factor) * 3;
+}
+
+run(newinstr);
