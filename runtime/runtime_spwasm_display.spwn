@@ -219,15 +219,6 @@ let add = () {
     })
 }
 
-let sub = () {
-    pop((x) {
-        wait(speed);
-        pop((y) {
-            result += y - x;
-        })
-    })
-}
-
 let mul = () {
     pop((x) {
         result = x;
@@ -246,12 +237,53 @@ let colors = {
     "5": [255, 255, 255] // white
 }
 
-let run = (instructions) {
+let simulate = (instructions) {
+    let ct_stack = [];
+    let index = 0;
+    let new_instructions = [];
+    for i in instructions {
+        match(i.opcode) {
+            =="i32.add": () {
+                ct_stack.push(stack.pop() + stack.pop());
+                new_instructions.push(i); // basically tries to recreate current instructions
+            }(),
+            =="i32.const": () {
+                ct_stack.push(i.args[0]);
+                new_instructions.push(i);
+            }(),
+            =="if": () {
+                if (ct_stack.pop() != 0) {
+                    // if the `if` opcode is successful,
+                    // replace current instruction (i) with 
+                    // `i32.const (result)`
+                    for x in i.args[0] {
+                        new_instructions.push(x);
+                    }
+                } else {
+                    // same thing as `then`, except runs the second argument
+                     for x in i.args[1] {
+                        new_instructions.push(x);
+                    }
+                }
+            }()
+            else: () {
+                new_instructions.push(i);
+            } ()
+        };
+        index++;
+    };
+    return { stack: ct_stack, new_instructions };
+}
+
+let run = (let instructions, r = false) {
+    instructions = simulate(instructions).new_instructions;
+
     let newinstr = [];
 
+    if (!r) {
     let cy = 43 * 3;
     factor = 4;
-
+    let index = 0;
     for i in instructions {
         let hasArgs = true;
         if !("args" in i) {
@@ -272,15 +304,23 @@ let run = (instructions) {
         newinstr.push(i);
         cy -= (10 / factor) * 3;
     }
+    } else {
+        newinstr = instructions;
+    }
     for i in newinstr {
         wait(speed);
-        i.marker.set(rgb8(0, 255, 0))
+        if (!r) {
+            i.marker.set(rgb8(0, 255, 0))
+        }
         match(i.opcode) {
             =="i32.const": () {
                 push(i.args[0]);
             }(), 
             =="i32.add": () {
                 add();
+            }(), 
+            =="i32.sub": () {
+                sub();
             }(), 
             =="i32.mul": () {
                 mul();
@@ -294,14 +334,28 @@ let run = (instructions) {
             == "drawpix": () {
                 drawPix(i.args[0], i.args[1])
             }(), 
+            == "erasepix": () {
+                drawPix([0, 0, 0], i.args[1])
+            }(), 
             =="clear": () {
                 clear();
             }(), 
             =="clearmem": () {
                 clearmem();
+            }(),
+            =="ontouch": () {
+                on(touch(), !{
+                    run(i.args[0], true)
+                })
+            }(),
+            =="ontouchdual": () {
+                on(touch(dual_side = true), !{
+                    run(i.args[0], true)
+                })
+            }(),
+            =="drop": () {
+               pop();
             }()
         }
     };
 }
-
-return run;
