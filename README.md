@@ -7,6 +7,8 @@ Attempting to run WASM/WAST/WAT instructions in SPWN to run C/C++/Rust code in S
 - `i32.const`
 - `i32.store`
 - `i32.load`
+- `drop`
+- `if`
 
 # Custom instructions exclusive to SPWASM
 - `clear` (resets the stack)
