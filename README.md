@@ -39,6 +39,8 @@ $.print(result) // 20
 
 Runtime: 
 ```rs
+let vm = @stack_vm::create();
+
 let instructions = [
     { opcode: "drawpix", args: [[255, 255, 255], [5, 5]]},
     { opcode: "i32.const", args: [5]},
@@ -46,5 +48,5 @@ let instructions = [
     { opcode: "i32.add" },
 ];
 
-run(newinstr);
+vm.run(newinstr);
 ```
