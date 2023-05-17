@@ -75,7 +75,46 @@ let add = () {
     })
 }
 
+let simulate = (instructions) {
+    let ct_stack = [];
+    let index = 0;
+    let new_instructions = [];
+    for i in instructions {
+        match(i.opcode) {
+            =="i32.add": () {
+                ct_stack.push(stack.pop() + stack.pop());
+                new_instructions.push(i); // basically tries to recreate current instructions
+            }(),
+            =="i32.const": () {
+                ct_stack.push(i.args[0]);
+                new_instructions.push(i);
+            }(),
+            =="if": () {
+                if (ct_stack.pop() != 0) {
+                    // if the `if` opcode is successful,
+                    // replace current instruction (i) with 
+                    // `i32.const (result)`
+                    for x in i.args[0] {
+                        new_instructions.push(x);
+                    }
+                } else {
+                    // same thing as `then`, except runs the second argument
+                     for x in i.args[1] {
+                        new_instructions.push(x);
+                    }
+                }
+            }()
+            else: () {
+                new_instructions.push(i);
+            } ()
+        };
+        index++;
+    };
+    return { stack: ct_stack, new_instructions };
+}
+
 let run = (instructions) {
+    instructions = simulate(instructions).new_instructions;
     for i in instructions {
         match(i.opcode) {
             =="i32.const": () {
@@ -102,10 +141,10 @@ impl @stack_vm {
 };
 
 /* USAGE:
-let vm = @stack_vm::create([
+let vm = @stack_vm::create(); // params will be implemented soon
+vm.run([
     { opcode: "i32.const", args: [2] },
     { opcode: "i32.const", args: [3] },
     { opcode: "i32.add" }
-]); // params will be implemented soon
-vm.run(instructions);
+]);
 */
