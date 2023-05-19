@@ -343,8 +343,12 @@ let simulate = (instructions) {
     return { stack: ct_stack, new_instructions };
 }
 
-let run = (let instructions, r = false) {
-    instructions = simulate(instructions).new_instructions;
+let params = [counter(-1), counter(-1), counter(-1)];
+
+let run = (let instructions, r = false, simulate = true) {
+    if (simulate) {
+        instructions = simulate(instructions).new_instructions;
+    }
 
     let newinstr = [];
 
@@ -381,6 +385,11 @@ let run = (let instructions, r = false) {
             i.marker.set(rgb8(0, 255, 0))
         }
         match(i.opcode) {
+            =="params": () {
+                check(params[i.args[0]], (n) {
+                    push(n);
+                })
+            }(),
             =="i32.const": () {
                 push(i.args[0]);
             }(), 
@@ -441,21 +450,9 @@ impl @stack_vm {
 
 let vm = @stack_vm::create();
 let instructions = [
-    { opcode: "param", args: [0]},
-    { opcode: "func", args: ["test",
-        [
-            { opcode: 'i32.const', args: [9]},
-            { opcode: 'i32.const', args: [10]},
-            { opcode: 'i32.add' },
-        ]
-    ]},
-    { opcode: "i32.const", args: [1]},
-    { opcode: "if", args: [
-        [
-            { opcode: "drop" },
-            { opcode: "call", args: ["test"]}
-        ]
-    ]}
+    { opcode: "params", args: [0]},
+    { opcode: "i32.const", args: [5] },
+    { opcode: "i32.add", args: []}
 ]
 
 let keypstart = [250*3, 50*3];
@@ -477,7 +474,6 @@ $.add(obj {
 
 color.set(rgb8(0, 255, 0));
 
-clicks.display(450*3, 25*3)
 
 let touching_nondual = counter(false);
 
@@ -486,8 +482,8 @@ on(touch(), !{
     group.move(15, 0);
     if (clicks == 2 || clicks == 5 || clicks == 8) {
         group.move(-45, -15);
-    } else if (clicks == 10) {
-        group.move(-30, 45)
+    } else if (clicks == 11) {
+        group.move(-45, 45)
         clicks = 0;
         clicks--;
     } 
@@ -500,23 +496,24 @@ on(touch_end(), !{
 
 let times_dualed = counter(0);
 let fillparam = counter(0);
-let params = [counter(0), counter(0), counter(0)];
 
 on(touch(dual_side = true), !{
     if !@bool(touching_nondual) {
         if (times_dualed == 0) {
             input += clicks;
             times_dualed++;
-        } else if (times_dualed <= 9) {
+        } else if (clicks <= 9) {
             input *= 10;
             input += clicks;
             times_dualed++;
-        } else {
+        } else if (clicks == 10) {
             check_three(fillparam, (x) {
-                params[x] = input;
+                params[x] += input + 1;
                 input = 0;
                 fillparam++;
             });
+        } else if (clicks == 11) {
+            vm.run(instructions, true, false);
         }
     }
 })        
@@ -530,6 +527,7 @@ for i in 0..3 {
 }
 
 $.add("OK".to_obj().with(X, (250*3)+15*3).with(Y, 15).with(SCALING, 0.7));
+$.add("RUN".to_obj().with(X, (250*3)+30*3).with(Y, 15).with(SCALING, 0.6));
 
 for i in 0..10 {
     if (i == 3 || i == 6 || i == 9) {
@@ -539,5 +537,3 @@ for i in 0..10 {
     $.add((i as @string).to_obj().with(X, keypstart[0]).with(Y, keypstart[1]));
     keypstart[0] += 15 * 3;
 }
-
-vm.run(instructions);
