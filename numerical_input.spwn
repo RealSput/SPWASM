@@ -299,6 +299,10 @@ let simulate = (instructions) {
     let new_instructions = [];
     for i in instructions {
         match(i.opcode) {
+            =="params": () {
+                ct_stack.push(420);
+                new_instructions.push(i);
+            }(),
             =="func": () {
                 funcs[i.args[0]] = i.args[1];
             }(),
@@ -308,8 +312,12 @@ let simulate = (instructions) {
                 }
             }(),
             =="i32.add": () {
-                ct_stack.push(stack.pop() + stack.pop());
+                ct_stack.push(ct_stack.pop() + ct_stack.pop());
                 new_instructions.push(i); // basically tries to recreate current instructions
+            }(),
+            =="i32.mul": () {
+                ct_stack.push(ct_stack.pop() * ct_stack.pop());
+                new_instructions.push(i);
             }(),
             =="i32.const": () {
                 ct_stack.push(i.args[0]);
@@ -344,6 +352,14 @@ let simulate = (instructions) {
 }
 
 let params = [counter(-1), counter(-1), counter(-1)];
+
+let instructions = simulate([
+    { opcode: "params", args: [0]},
+    { opcode: "i32.const", args: [ 2 ]},
+    { opcode: "i32.mul" }
+]).new_instructions;
+
+$.print(instructions);
 
 let run = (let instructions, r = false, simulate = true) {
     if (simulate) {
@@ -386,8 +402,8 @@ let run = (let instructions, r = false, simulate = true) {
         }
         match(i.opcode) {
             =="params": () {
-                check(params[i.args[0]], (n) {
-                    push(n);
+                check(i.args[0], (n) {
+                    push(params[n]);
                 })
             }(),
             =="i32.const": () {
@@ -449,11 +465,6 @@ impl @stack_vm {
 };
 
 let vm = @stack_vm::create();
-let instructions = [
-    { opcode: "params", args: [0]},
-    { opcode: "i32.const", args: [5] },
-    { opcode: "i32.add", args: []}
-]
 
 let keypstart = [250*3, 50*3];
 let input = counter(0);
