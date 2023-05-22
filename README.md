@@ -11,6 +11,7 @@ Attempting to run WASM/WAST/WAT instructions in SPWN to run C/C++/Rust code in S
 - `if`
 - `get_local`
 - `func` (only requires name & body, but no signatures or locals)
+- `call`
 
 # Custom instructions exclusive to SPWASM
 - `clear` (resets the stack)
