@@ -44,14 +44,12 @@ $.print(result) // 20
 
 Runtime: 
 ```rs
-let vm = @stack_vm::create();
-
-let instructions = [
+vm = @stack_vm::create()
+// no ".setMemory" because it is already set to 11 bytes, which seems really small but is enough for the runtime VM
+vm.run([
     { opcode: "drawpix", args: [[255, 255, 255], [5, 5]]},
     { opcode: "get_local", args: [0]} // instead of adding in a dictionary to `vm.run` for parameters, you can use `get_local` to push a parameter to the stack. 
     { opcode: "i32.const", args: [3]}, // input is usually entered by user before-hand, unless you are not using the SPWASM script with inputs
     { opcode: "i32.add" },
-];
-
-vm.run(newinstr);
+]);
 ```
