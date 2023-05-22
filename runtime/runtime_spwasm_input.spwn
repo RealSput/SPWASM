@@ -263,7 +263,7 @@ let simulate = (instructions) {
     for i in instructions {
         match(i.opcode) {
             ==
-            "params": () {
+            "get_local": () {
                 ct_stack.push(420);
                 new_instructions.push(i);
             }(), ==
@@ -363,7 +363,7 @@ let run = (let instructions, r = false, simulate = true) {
         }
         match(i.opcode) {
             ==
-            "params": () {
+            "get_local": () {
                 check(i.args[0], (n) {
                     push(params[n]);
                 })
