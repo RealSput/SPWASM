@@ -363,7 +363,7 @@ let run = (let instructions, r = false) {
 // this is not really needed, but implemented just for compatibility
 type @stack_vm;
 impl @stack_vm {
-  create() {
+  create: () {
     return {
       run,
       setMemory: () {} // mock function
